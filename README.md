@@ -2,38 +2,21 @@
 # zeppelin
 
 A `debian:jessie` based Spark [Zeppelin](http://zeppelin.incubator.apache.org) Docker container.
-This was forked from dylanmei/docker-zeppelin with some slight changes to get it up with spark 1.5
+This was forked from [dylanmei/docker-zeppelin](https://github.com/dylanmei/docker-zeppelin) with some slight modifications to get it up with spark 1.5
 
 ## usage
-
 Run the Zeppelin container in Spark local mode, or in a Spark cluster.
 
 ### local
 
-Pull the image and run the container:
-
+Build the image and run in local mode with data volume mounted
 ```
-docker pull dylanmei/zeppelin:latest
-docker run --name zeppelin -p 8080:8080 -p 8081:8081 dylanmei/zeppelin:latest
+docker build -t zeppelin:1.5.0 .
+mkdir /data && chmod -R 777 /data
+docker run -d -v /data:/zeppelin/data -p 8080:8080 -p 8081:8081 zeppelin:1.5.0
 ```
 
 Zeppelin will be running at `http://${YOUR_DOCKER_HOST}:8080`.
-
-#### specify a data volume
-
-Optionally, use Docker volumes to map the local `./data` directory as the `/data/zeppelin` directory used in the Zeppelin *banks.csv* tutorial:
-
-```
-docker run --name zeppelin -v `pwd`/data:/zeppelin/data -p 8080:8080 -p 8081:8081 dylanmei/zeppelin:latest
-```
-
-#### modify the default ports
-
-By default, Zeppelin wants to use ports 8080-8081. So do a lot of other things, including a Spark master UI. Change the ports Zeppelin uses by specifying `--environment "ZEPPELIN_PORT="8090"` to `docker run`. For example:
-
-```
-docker run --name zeppelin -e "ZEPPELIN_PORT=8090" -p 8090:8090 -p 8091:8091 dylanmei/zeppelin:latest
-```
 
 ### cluster
 
@@ -47,30 +30,7 @@ The Spark Master UI will be running at `http://${YOUR_DOCKER_HOST}:8080` and Zep
 
 ## customize
 
-Forking this project to change Spark/Hadoop versions is unnecessary! Instead, create a `Dockerfile` based on `dylanmei/zeppelin:master` and supply a new, executable `install.sh` file in the same directory. It will override the base one via Docker's [ONBUILD](https://docs.docker.com/reference/builder/#onbuild) instruction.
-
-The steps, expressed here as a script, can be as simple as:
-
-```
-#!/bin/bash
-cat > ./Dockerfile <<DOCKERFILE
-FROM dylanmei/zeppelin:master
-
-ENV ZEPPELIN_MEM="-Xmx1024m"
-DOCKERFILE
-
-cat > ./install.sh <<INSTALL
-git pull
-mvn clean package -DskipTests \
-  -Pspark-1.2 \
-  -Dspark.version=1.2.1 \
-  -Phadoop-2.2 \
-  -Dhadoop.version=2.0.0-cdh4.2.0 \
-  -Pyarn
-INSTALL
-
-docker build -t my_zeppelin .
-```
+modify the install.sh script:
 
 ## license
 
